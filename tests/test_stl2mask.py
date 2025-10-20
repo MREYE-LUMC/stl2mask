@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 import SimpleITK as sitk
 
 import stl2mask.stl2mask as stl2mask_module
@@ -141,3 +142,20 @@ def test_mask_to_image_preserves_metadata() -> None:
     assert tuple(result.GetDirection()) == tuple(reference.GetDirection())
     expected = np.swapaxes(mask, 0, 2)
     np.testing.assert_array_equal(sitk.GetArrayFromImage(result), expected)
+
+
+def test_voxelize_mesh_validates_mask_value(mocker: MockerFixture) -> None:
+    mock_mesh = mocker.Mock()
+    mock_image = mocker.Mock()
+    mock_image.GetOrigin.return_value = (0.0, 0.0, 0.0)
+    mock_image.GetDirection.return_value = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
+    mock_image.GetSpacing.return_value = (1.0, 1.0, 1.0)
+    mock_image.GetSize.return_value = (10, 10, 10)
+
+    # Test invalid mask_value (too low)
+    with pytest.raises(ValueError, match="mask_value must be between 1 and 255"):
+        stl2mask_module.voxelize_mesh(mock_mesh, mock_image, mask_value=0)
+
+    # Test invalid mask_value (too high)
+    with pytest.raises(ValueError, match="mask_value must be between 1 and 255"):
+        stl2mask_module.voxelize_mesh(mock_mesh, mock_image, mask_value=256)

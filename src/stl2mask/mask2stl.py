@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 from traceback import format_exc
@@ -13,7 +14,12 @@ import meshlib.mrmeshpy as mm
 import numpy as np
 import SimpleITK as sitk
 
-from stl2mask.helpers import matrix3f, read_image
+from stl2mask.helpers import matrix3f, read_image, save_mesh
+
+# Configure logging if not already configured
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
 
 
 def copy_mask_origin_and_direction(mesh: mm.Mesh, mask: sitk.Image) -> None:
@@ -122,7 +128,9 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
         values in the mask is used.
 
     """
+    logger.debug("Reading mask from %s", mask_path)
     mask = read_image(mask_path)
+    logger.debug("Mask dimensions: %s, spacing: %s", mask.GetSize(), mask.GetSpacing())
 
     mask_values = np.unique(sitk.GetArrayViewFromImage(mask))
     if mask_values.size > MAX_MASK_VALUES:
@@ -134,13 +142,18 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
         raise ValueError(msg)
 
     image = read_image(image_path) if image_path else None
+    if image is not None:
+        logger.debug("Using reference image from %s", image_path)
 
+    logger.debug("Converting mask to mesh using iso-value: %s", iso_value if iso_value is not None else "auto")
     mesh = mask_to_mesh(mask, iso_value)
 
     if image is not None:
+        logger.debug("Transforming mesh to reference image coordinate system")
         transform_mesh(mesh, mask, image)
 
-    mm.saveMesh(mesh, output_path)
+    logger.debug("Saving mesh to %s", output_path)
+    save_mesh(mesh, output_path)
 
 
 @click.command()
@@ -185,8 +198,6 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
 )
 def cli(mask: Path, image: Path | None, output: Path, suffix: str = ".stl", iso_value: float | None = None) -> NoReturn:
     """Convert a binary MASK to a mesh."""
-    click.secho("floep")
-
     if not suffix.startswith("."):
         msg = "Suffix must start with a dot (e.g. .stl)"
         raise click.BadParameter(msg)
@@ -201,8 +212,9 @@ def cli(mask: Path, image: Path | None, output: Path, suffix: str = ".stl", iso_
 
     try:
         mask2stl(mask, image, output, iso_value)
-    except RuntimeError as e:
-        click.secho(f"❌ {e}: {format_exc()}", fg="red")
+    except (RuntimeError, ValueError) as e:
+        click.secho(f"❌ {e}", fg="red")
+        logger.debug("Full traceback: %s", format_exc())
         sys.exit(1)
 
     click.secho(f"✅ Mesh written to {output}", fg="green")
