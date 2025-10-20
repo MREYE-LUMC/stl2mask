@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import SimpleITK as sitk
-from click.testing import CliRunner
 
 import stl2mask.stl2mask as stl2mask_module
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from click.testing import CliRunner
     from pytest_mock import MockerFixture
 
 
