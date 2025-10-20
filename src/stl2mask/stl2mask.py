@@ -147,11 +147,18 @@ def stl2mask(
         Value to set the mask voxels to. Must be between 1 and 255. Defaults to 255.
 
     """
+    logger.debug("Reading mesh from %s", mesh_path)
     mesh = read_mesh(mesh_path)
+    
+    logger.debug("Reading reference image from %s", image_path)
     image = read_image(image_path)
+    logger.debug("Image dimensions: %s, spacing: %s", image.GetSize(), image.GetSpacing())
 
+    logger.debug("Voxelizing mesh with threshold=%.2f, offset=%.2f, mask_value=%d", threshold, offset, mask_value)
     mask = voxelize_mesh(mesh, image, threshold, offset, mask_value)
     mask_image = mask_to_image(mask, image)
+    
+    logger.debug("Saving mask to %s", output_path)
     save_mask(mask_image, output_path)
 
 
@@ -244,7 +251,8 @@ def cli(
             mask_value=mask_value,
         )
     except RuntimeError as e:
-        click.secho(f"❌ {e}: {format_exc()}", fg="red")
+        click.secho(f"❌ {e}", fg="red")
+        logger.debug("Full traceback: %s", format_exc())
         sys.exit(1)
 
     click.secho(f"✅ Mask written to {output}", fg="green")
