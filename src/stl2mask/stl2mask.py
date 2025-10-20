@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 
 __all__ = ["stl2mask"]
 
-logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+# Configure logging if not already configured
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 Coordinate = tuple[float, float, float]
@@ -60,6 +62,10 @@ def voxelize_mesh(
         are set to 255, voxels outside the mesh are set to 0.
 
     """
+    if not 1 <= mask_value <= 255:
+        msg = f"mask_value must be between 1 and 255, got {mask_value}"
+        raise ValueError(msg)
+    
     # Get the transform based on the orientation of the image. The transform is defined around the image origin.
     transform = mm.AffineXf3f.xfAround(matrix3f(image.GetDirection()), mm.Vector3f(*image.GetOrigin()))
     transformed_mesh = mm.copyMesh(mesh)

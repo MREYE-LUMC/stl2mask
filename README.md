@@ -36,7 +36,7 @@ stl2mask path/to/mesh.stl path/to/image.nii.gz
 - `-s`, `--suffix`: Suffix for the output file if `--output` is not provided. Default is `.nii.gz`.
 - `-t`, `--threshold`: Threshold value for converting the mesh to a binary mask. Default is `0.0`.
 - `-f`, `--offset`: Offset to apply to the origin of the distance volume, in terms of voxel spacing. This can help with alignment issues. Default is `0.5`.
-- `-m`, `--mask-value`: Value to assign to the mask voxels inside the mesh. Default is `1`.
+- `-m`, `--mask-value`: Value to assign to the mask voxels inside the mesh. Default is `255`.
 
 ### `mask2stl`
 
@@ -56,6 +56,43 @@ mask2stl path/to/mask.nii.gz
 - `-s`, `--suffix`: Suffix for the output file if `--output` is not provided. Default is `.stl`.
 - `-v`, `--iso-value`: Iso-value for the Marching Cubes algorithm. Defaults to the midpoint between the minimum and maximum values in the mask image.
 
+## Examples
 
+### Converting a mesh to a mask
 
+Basic conversion with default parameters:
+```bash
+stl2mask tumor.stl reference_image.nii.gz
+```
 
+Specify custom output location and mask value:
+```bash
+stl2mask tumor.stl reference_image.nii.gz -o output/tumor_mask.nii.gz -m 1
+```
+
+Adjust threshold for better mesh alignment:
+```bash
+stl2mask tumor.stl reference_image.nii.gz -t 0.5 -f 0.25
+```
+
+### Converting a mask to a mesh
+
+Basic conversion:
+```bash
+mask2stl tumor_mask.nii.gz
+```
+
+With a reference image for coordinate system transformation:
+```bash
+mask2stl tumor_mask.nii.gz -i reference_image.nii.gz -o tumor.stl
+```
+
+## Troubleshooting
+
+For debugging information, set the logging level to DEBUG:
+```bash
+export PYTHONLOGLEVEL=DEBUG
+stl2mask mesh.stl image.nii.gz
+```
+
+This will show detailed information about image dimensions, spacing, and processing steps.

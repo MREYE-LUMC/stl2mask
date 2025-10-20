@@ -16,7 +16,9 @@ import SimpleITK as sitk
 
 from stl2mask.helpers import matrix3f, read_image, save_mesh
 
-logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+# Configure logging if not already configured
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 
