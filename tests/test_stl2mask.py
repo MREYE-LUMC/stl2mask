@@ -141,3 +141,26 @@ def test_mask_to_image_preserves_metadata() -> None:
     assert tuple(result.GetDirection()) == tuple(reference.GetDirection())
     expected = np.swapaxes(mask, 0, 2)
     np.testing.assert_array_equal(sitk.GetArrayFromImage(result), expected)
+
+
+def test_voxelize_mesh_validates_mask_value(mocker: MockerFixture) -> None:
+    mock_mesh = mocker.Mock()
+    mock_image = mocker.Mock()
+    mock_image.GetOrigin.return_value = (0.0, 0.0, 0.0)
+    mock_image.GetDirection.return_value = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
+    mock_image.GetSpacing.return_value = (1.0, 1.0, 1.0)
+    mock_image.GetSize.return_value = (10, 10, 10)
+
+    # Test invalid mask_value (too low)
+    try:
+        stl2mask_module.voxelize_mesh(mock_mesh, mock_image, mask_value=0)
+        assert False, "Expected ValueError for mask_value=0"  # noqa: B011, PT015
+    except ValueError as e:
+        assert "mask_value must be between 1 and 255" in str(e)
+
+    # Test invalid mask_value (too high)
+    try:
+        stl2mask_module.voxelize_mesh(mock_mesh, mock_image, mask_value=256)
+        assert False, "Expected ValueError for mask_value=256"  # noqa: B011, PT015
+    except ValueError as e:
+        assert "mask_value must be between 1 and 255" in str(e)

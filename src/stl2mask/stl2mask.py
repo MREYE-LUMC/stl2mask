@@ -59,7 +59,7 @@ def voxelize_mesh(
     -------
     np.ndarray
         The binary mask as a 3D UInt8 array. The mask has the same size as `image`. Voxels inside the mesh
-        are set to 255, voxels outside the mesh are set to 0.
+        are set to `mask_value`, voxels outside the mesh are set to 0.
 
     """
     if not 1 <= mask_value <= 255:
