@@ -54,7 +54,7 @@ def mask_to_mesh(mask: sitk.Image, iso_value: float | None = None) -> mm.Mesh:
     if iso_value is None:
         mask_min = np.min(sitk.GetArrayViewFromImage(mask))
         mask_max = np.max(sitk.GetArrayViewFromImage(mask))
-        iso_value = cast(float, (mask_min + mask_max) / 2)
+        iso_value = cast("float", (mask_min + mask_max) / 2)
 
     settings = mm.GridToMeshSettings()
     settings.voxelSize = mm.Vector3f(*mask.GetSpacing())
