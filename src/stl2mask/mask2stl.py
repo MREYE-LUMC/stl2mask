@@ -13,7 +13,7 @@ import meshlib.mrmeshpy as mm
 import numpy as np
 import SimpleITK as sitk
 
-from stl2mask.helpers import matrix3f, read_image
+from stl2mask.helpers import matrix3f, read_image, save_mesh
 
 
 def copy_mask_origin_and_direction(mesh: mm.Mesh, mask: sitk.Image) -> None:
@@ -140,7 +140,7 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
     if image is not None:
         transform_mesh(mesh, mask, image)
 
-    mm.saveMesh(mesh, output_path)
+    save_mesh(mesh, output_path)
 
 
 @click.command()
@@ -185,8 +185,6 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
 )
 def cli(mask: Path, image: Path | None, output: Path, suffix: str = ".stl", iso_value: float | None = None) -> NoReturn:
     """Convert a binary MASK to a mesh."""
-    click.secho("floep")
-
     if not suffix.startswith("."):
         msg = "Suffix must start with a dot (e.g. .stl)"
         raise click.BadParameter(msg)

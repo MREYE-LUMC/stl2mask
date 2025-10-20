@@ -54,7 +54,7 @@ def test_mask2stl_without_reference_image(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(mask2stl_module, "read_image", fake_read_image)
     monkeypatch.setattr(mask2stl_module, "mask_to_mesh", fake_mask_to_mesh)
     monkeypatch.setattr(mask2stl_module, "transform_mesh", fake_transform_mesh)
-    monkeypatch.setattr(mask2stl_module.mm, "saveMesh", fake_save_mesh)
+    monkeypatch.setattr(mask2stl_module, "save_mesh", fake_save_mesh)
 
     mask2stl_module.mask2stl(mask_path, None, output_path, iso_value=64.0)
 
@@ -101,7 +101,7 @@ def test_mask2stl_with_reference_image(tmp_path: Path, monkeypatch: pytest.Monke
     monkeypatch.setattr(mask2stl_module, "read_image", fake_read_image)
     monkeypatch.setattr(mask2stl_module, "mask_to_mesh", fake_mask_to_mesh)
     monkeypatch.setattr(mask2stl_module, "transform_mesh", fake_transform_mesh)
-    monkeypatch.setattr(mask2stl_module.mm, "saveMesh", fake_save_mesh)
+    monkeypatch.setattr(mask2stl_module, "save_mesh", fake_save_mesh)
 
     mask2stl_module.mask2stl(mask_path, image_path, output_path, iso_value=None)
 
