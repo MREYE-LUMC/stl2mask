@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pytest
 import SimpleITK as sitk
 from click.testing import CliRunner
 
@@ -13,11 +12,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pytest_mock import MockerFixture
-
-
-@pytest.fixture
-def runner() -> CliRunner:
-    return CliRunner()
 
 
 def test_stl2mask_calls_dependencies(tmp_path: Path, mocker: MockerFixture) -> None:
