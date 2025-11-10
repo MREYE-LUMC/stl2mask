@@ -37,6 +37,7 @@ stl2mask path/to/mesh.stl path/to/image.nii.gz
 - `-t`, `--threshold`: Threshold value for converting the mesh to a binary mask. Default is `0.0`.
 - `-f`, `--offset`: Offset to apply to the origin of the distance volume, in terms of voxel spacing. This can help with alignment issues. Default is `0.5`.
 - `-m`, `--mask-value`: Value to assign to the mask voxels inside the mesh. Default is `255`.
+- `-l`, `--log-level`: Set the logging level. Options are `DEBUG`, `INFO`, `WARNING`, or `ERROR`. Default is `INFO`.
 
 ### `mask2stl`
 
@@ -55,6 +56,7 @@ mask2stl path/to/mask.nii.gz
 - `-o`, `--output`: Path to the output mesh file. If not provided, the output file will be saved in the current directory with the same name as the input mask file but with a `.stl` extension.
 - `-s`, `--suffix`: Suffix for the output file if `--output` is not provided. Default is `.stl`.
 - `-v`, `--iso-value`: Iso-value for the Marching Cubes algorithm. Defaults to the midpoint between the minimum and maximum values in the mask image.
+- `-l`, `--log-level`: Set the logging level. Options are `DEBUG`, `INFO`, `WARNING`, or `ERROR`. Default is `INFO`.
 
 ## Examples
 
@@ -94,11 +96,10 @@ mask2stl tumor_mask.nii.gz -i reference_image.nii.gz -o tumor.stl
 
 ## Troubleshooting
 
-For debugging information, set the logging level to DEBUG:
+For detailed debugging information, use the `--log-level DEBUG` option:
 
 ```bash
-export PYTHONLOGLEVEL=DEBUG
-stl2mask mesh.stl image.nii.gz
+stl2mask mesh.stl image.nii.gz --log-level DEBUG
 ```
 
 This will show detailed information about image dimensions, spacing, and processing steps.

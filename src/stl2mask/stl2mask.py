@@ -228,6 +228,14 @@ def stl2mask(
     show_default=True,
     help="Value to set the mask voxels to.",
 )
+@click.option(
+    "--log-level",
+    "-l",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
+    default="INFO",
+    show_default=True,
+    help="Set the logging level.",
+)
 def cli(
     mesh: Path,
     image: Path,
@@ -236,8 +244,12 @@ def cli(
     threshold: float = 0.0,
     offset: float = 0.5,
     mask_value: int = 255,
+    log_level: str = "INFO",
 ) -> NoReturn:
     """Convert a segmentation MESH to a binary mask for a given IMAGE."""
+    # Configure logging level based on user input
+    logging.getLogger().setLevel(getattr(logging, log_level.upper()))
+    
     if not suffix.startswith("."):
         msg = "Suffix must start with a dot (e.g. .nii.gz)"
         raise click.BadParameter(msg)

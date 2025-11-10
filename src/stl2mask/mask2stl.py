@@ -199,8 +199,26 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
         "maximum values in the mask is used."
     ),
 )
-def cli(mask: Path, image: Path | None, output: Path, suffix: str = ".stl", iso_value: float | None = None) -> NoReturn:
+@click.option(
+    "--log-level",
+    "-l",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
+    default="INFO",
+    show_default=True,
+    help="Set the logging level.",
+)
+def cli(
+    mask: Path,
+    image: Path | None,
+    output: Path,
+    suffix: str = ".stl",
+    iso_value: float | None = None,
+    log_level: str = "INFO",
+) -> NoReturn:
     """Convert a binary MASK to a mesh."""
+    # Configure logging level based on user input
+    logging.getLogger().setLevel(getattr(logging, log_level.upper()))
+    
     if not suffix.startswith("."):
         msg = "Suffix must start with a dot (e.g. .stl)"
         raise click.BadParameter(msg)
