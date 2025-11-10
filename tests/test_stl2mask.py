@@ -127,6 +127,47 @@ def test_cli_rejects_suffix_without_dot(tmp_path: Path, runner: CliRunner, mocke
     assert "Suffix must start with a dot" in result.output
 
 
+def test_cli_sets_requested_log_level(tmp_path: Path, runner: CliRunner, mocker: MockerFixture) -> None:
+    mesh_path = tmp_path / "mesh.stl"
+    mesh_path.write_text("")
+    image_path = tmp_path / "image.nii"
+    image_path.write_text("")
+
+    stl2mask_mock = mocker.patch("stl2mask.stl2mask.stl2mask")
+    get_logger_mock = mocker.patch("stl2mask.stl2mask.logging.getLogger")
+    logger_mock = mocker.Mock()
+    get_logger_mock.return_value = logger_mock
+
+    result = runner.invoke(
+        stl2mask_module.cli,
+        [str(mesh_path), str(image_path), "--log-level", "DEBUG"],
+    )
+
+    assert result.exit_code == 0
+    assert logger_mock.setLevel.call_args.args == ("DEBUG",)
+    assert stl2mask_mock.call_count == 1
+
+
+def test_cli_normalizes_log_level_case(tmp_path: Path, runner: CliRunner, mocker: MockerFixture) -> None:
+    mesh_path = tmp_path / "mesh.stl"
+    mesh_path.write_text("")
+    image_path = tmp_path / "image.nii"
+    image_path.write_text("")
+
+    mocker.patch("stl2mask.stl2mask.stl2mask")
+    get_logger_mock = mocker.patch("stl2mask.stl2mask.logging.getLogger")
+    logger_mock = mocker.Mock()
+    get_logger_mock.return_value = logger_mock
+
+    result = runner.invoke(
+        stl2mask_module.cli,
+        [str(mesh_path), str(image_path), "--log-level", "warning"],
+    )
+
+    assert result.exit_code == 0
+    assert logger_mock.setLevel.call_args.args == ("WARNING",)
+
+
 def test_mask_to_image_preserves_metadata() -> None:
     mask = np.arange(8, dtype=np.uint8).reshape((2, 2, 2))
 

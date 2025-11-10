@@ -232,7 +232,7 @@ def cli(
         click.secho(msg, fg="yellow")
 
     try:
-        mask2stl(mask, image, output, iso_value)
+        mask2stl(mask_path=mask, image_path=image, output_path=output, iso_value=iso_value)
     except (RuntimeError, ValueError) as e:
         click.secho(f"❌ {e}", fg="red")
         logger.debug("Full traceback: %s", format_exc())
