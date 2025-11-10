@@ -6,7 +6,7 @@ import logging
 import sys
 from pathlib import Path
 from traceback import format_exc
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING, Literal, NoReturn
 
 import click
 import meshlib.mrmeshnumpy as mn
@@ -244,12 +244,12 @@ def cli(
     threshold: float = 0.0,
     offset: float = 0.5,
     mask_value: int = 255,
-    log_level: str = "INFO",
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
 ) -> NoReturn:
     """Convert a segmentation MESH to a binary mask for a given IMAGE."""
     # Configure logging level based on user input
-    logging.getLogger().setLevel(getattr(logging, log_level.upper()))
-    
+    logging.getLogger().setLevel(log_level)
+
     if not suffix.startswith("."):
         msg = "Suffix must start with a dot (e.g. .nii.gz)"
         raise click.BadParameter(msg)

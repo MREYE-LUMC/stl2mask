@@ -6,7 +6,7 @@ import logging
 import sys
 from pathlib import Path
 from traceback import format_exc
-from typing import NoReturn, cast
+from typing import Literal, NoReturn, cast
 
 import click
 import meshlib.mrmeshnumpy as mn
@@ -213,12 +213,12 @@ def cli(
     output: Path,
     suffix: str = ".stl",
     iso_value: float | None = None,
-    log_level: str = "INFO",
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
 ) -> NoReturn:
     """Convert a binary MASK to a mesh."""
     # Configure logging level based on user input
-    logging.getLogger().setLevel(getattr(logging, log_level.upper()))
-    
+    logging.getLogger().setLevel(log_level)
+
     if not suffix.startswith("."):
         msg = "Suffix must start with a dot (e.g. .stl)"
         raise click.BadParameter(msg)
