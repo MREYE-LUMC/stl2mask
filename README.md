@@ -61,16 +61,19 @@ mask2stl path/to/mask.nii.gz
 ### Converting a mesh to a mask
 
 Basic conversion with default parameters:
+
 ```bash
 stl2mask tumor.stl reference_image.nii.gz
 ```
 
 Specify custom output location and mask value:
+
 ```bash
 stl2mask tumor.stl reference_image.nii.gz -o output/tumor_mask.nii.gz -m 1
 ```
 
 Adjust threshold for better mesh alignment:
+
 ```bash
 stl2mask tumor.stl reference_image.nii.gz -t 0.5 -f 0.25
 ```
@@ -78,11 +81,13 @@ stl2mask tumor.stl reference_image.nii.gz -t 0.5 -f 0.25
 ### Converting a mask to a mesh
 
 Basic conversion:
+
 ```bash
 mask2stl tumor_mask.nii.gz
 ```
 
 With a reference image for coordinate system transformation:
+
 ```bash
 mask2stl tumor_mask.nii.gz -i reference_image.nii.gz -o tumor.stl
 ```
@@ -90,6 +95,7 @@ mask2stl tumor_mask.nii.gz -i reference_image.nii.gz -o tumor.stl
 ## Troubleshooting
 
 For debugging information, set the logging level to DEBUG:
+
 ```bash
 export PYTHONLOGLEVEL=DEBUG
 stl2mask mesh.stl image.nii.gz
