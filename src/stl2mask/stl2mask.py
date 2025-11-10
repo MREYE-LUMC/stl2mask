@@ -24,9 +24,12 @@ __all__ = ["stl2mask"]
 # Configure logging if not already configured
 if not logging.getLogger().handlers:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
+
 logger = logging.getLogger(__name__)
 
 Coordinate = tuple[float, float, float]
+
+MAXIMUM_MASK_VALUE = 255
 
 
 def voxelize_mesh(
@@ -62,10 +65,10 @@ def voxelize_mesh(
         are set to `mask_value`, voxels outside the mesh are set to 0.
 
     """
-    if not 1 <= mask_value <= 255:
+    if not 1 <= mask_value <= MAXIMUM_MASK_VALUE:
         msg = f"mask_value must be between 1 and 255, got {mask_value}"
         raise ValueError(msg)
-    
+
     # Get the transform based on the orientation of the image. The transform is defined around the image origin.
     transform = mm.AffineXf3f.xfAround(matrix3f(image.GetDirection()), mm.Vector3f(*image.GetOrigin()))
     transformed_mesh = mm.copyMesh(mesh)
@@ -155,7 +158,7 @@ def stl2mask(
     """
     logger.debug("Reading mesh from %s", mesh_path)
     mesh = read_mesh(mesh_path)
-    
+
     logger.debug("Reading reference image from %s", image_path)
     image = read_image(image_path)
     logger.debug("Image dimensions: %s, spacing: %s", image.GetSize(), image.GetSpacing())
@@ -163,7 +166,7 @@ def stl2mask(
     logger.debug("Voxelizing mesh with threshold=%.2f, offset=%.2f, mask_value=%d", threshold, offset, mask_value)
     mask = voxelize_mesh(mesh, image, threshold, offset, mask_value)
     mask_image = mask_to_image(mask, image)
-    
+
     logger.debug("Saving mask to %s", output_path)
     save_mask(mask_image, output_path)
 
