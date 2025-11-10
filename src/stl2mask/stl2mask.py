@@ -6,7 +6,7 @@ import logging
 import sys
 from pathlib import Path
 from traceback import format_exc
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING, Literal, NoReturn
 
 import click
 import meshlib.mrmeshnumpy as mn
@@ -21,10 +21,15 @@ if TYPE_CHECKING:
 
 __all__ = ["stl2mask"]
 
-logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+# Configure logging if not already configured
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
 logger = logging.getLogger(__name__)
 
 Coordinate = tuple[float, float, float]
+
+MAXIMUM_MASK_VALUE = 255
 
 
 def voxelize_mesh(
@@ -57,9 +62,13 @@ def voxelize_mesh(
     -------
     np.ndarray
         The binary mask as a 3D UInt8 array. The mask has the same size as `image`. Voxels inside the mesh
-        are set to 255, voxels outside the mesh are set to 0.
+        are set to `mask_value`, voxels outside the mesh are set to 0.
 
     """
+    if not 1 <= mask_value <= MAXIMUM_MASK_VALUE:
+        msg = f"mask_value must be between 1 and 255, got {mask_value}"
+        raise ValueError(msg)
+
     # Get the transform based on the orientation of the image. The transform is defined around the image origin.
     transform = mm.AffineXf3f.xfAround(matrix3f(image.GetDirection()), mm.Vector3f(*image.GetOrigin()))
     transformed_mesh = mm.copyMesh(mesh)
@@ -147,11 +156,18 @@ def stl2mask(
         Value to set the mask voxels to. Must be between 1 and 255. Defaults to 255.
 
     """
+    logger.debug("Reading mesh from %s", mesh_path)
     mesh = read_mesh(mesh_path)
-    image = read_image(image_path)
 
+    logger.debug("Reading reference image from %s", image_path)
+    image = read_image(image_path)
+    logger.debug("Image dimensions: %s, spacing: %s", image.GetSize(), image.GetSpacing())
+
+    logger.debug("Voxelizing mesh with threshold=%.2f, offset=%.2f, mask_value=%d", threshold, offset, mask_value)
     mask = voxelize_mesh(mesh, image, threshold, offset, mask_value)
     mask_image = mask_to_image(mask, image)
+
+    logger.debug("Saving mask to %s", output_path)
     save_mask(mask_image, output_path)
 
 
@@ -212,6 +228,14 @@ def stl2mask(
     show_default=True,
     help="Value to set the mask voxels to.",
 )
+@click.option(
+    "--log-level",
+    "-l",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
+    default="INFO",
+    show_default=True,
+    help="Set the logging level.",
+)
 def cli(
     mesh: Path,
     image: Path,
@@ -220,8 +244,12 @@ def cli(
     threshold: float = 0.0,
     offset: float = 0.5,
     mask_value: int = 255,
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
 ) -> NoReturn:
     """Convert a segmentation MESH to a binary mask for a given IMAGE."""
+    # Configure logging level based on user input
+    logging.getLogger().setLevel(log_level)
+
     if not suffix.startswith("."):
         msg = "Suffix must start with a dot (e.g. .nii.gz)"
         raise click.BadParameter(msg)
@@ -244,7 +272,8 @@ def cli(
             mask_value=mask_value,
         )
     except RuntimeError as e:
-        click.secho(f"❌ {e}: {format_exc()}", fg="red")
+        click.secho(f"❌ {e}", fg="red")
+        logger.debug("Full traceback: %s", format_exc())
         sys.exit(1)
 
     click.secho(f"✅ Mask written to {output}", fg="green")
