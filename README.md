@@ -18,6 +18,8 @@ Or with `uv`:
 uv tool install stl2mask
 ```
 
+If you are not familiar with `uv`, read [this guide](https://haasj.es/uv) to get started.
+
 ## Usage
 
 ### `stl2mask`
