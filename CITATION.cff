@@ -11,7 +11,11 @@ authors:
   - given-names: Corné
     family-names: Haasjes
     affiliation: Leiden University Medical Center
-    orcid: 'https://orcid.org/0000-0003-0187-4116'
+    orcid: 0000-0003-0187-4116
+  - given-names: Jan-Willem M
+    family-names: Beenakker
+    affiliation: Leiden University Medical Center
+    orcid: 0000-0003-0479-5587
 identifiers:
   - type: doi
     value: 10.5281/zenodo.18759446
