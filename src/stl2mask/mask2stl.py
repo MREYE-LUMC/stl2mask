@@ -25,6 +25,25 @@ if not logging.getLogger().handlers:
 logger = logging.getLogger(__name__)
 
 
+def fill_holes_in_mask(mask: sitk.Image) -> sitk.Image:
+    """Fill holes in a binary mask image.
+
+    Parameters
+    ----------
+    mask : sitk.Image
+        The input binary mask image.
+
+    Returns
+    -------
+    sitk.Image
+        The binary mask image with holes filled.
+
+    """
+    foreground_value = float(sitk.GetArrayViewFromImage(mask).max())
+
+    return sitk.BinaryFillhole(mask, fullyConnected=False, foregroundValue=foreground_value)
+
+
 def copy_mask_origin_and_direction(mesh: mm.Mesh, mask: sitk.Image) -> None:
     """Apply the mask's direction and origin to the mesh in place.
 
@@ -110,7 +129,7 @@ def transform_mesh(mesh: mm.Mesh, mask: sitk.Image, image: sitk.Image) -> None:
 MAX_MASK_VALUES = 2
 
 
-def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_value: float | None = None) -> None:
+def mask2stl(*, mask_path: Path, image_path: Path | None, output_path: Path, iso_value: float | None = None, fill_holes: bool = False) -> None:
     """Convert a binary mask to a mesh and save it to a file.
 
     The mask contour is extracted using the dual marching cubes algorithm, based
@@ -147,6 +166,10 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
     image = read_image(image_path) if image_path else None
     if image is not None:
         logger.debug("Using reference image from %s", image_path)
+
+    if fill_holes:
+        logger.debug("Filling holes in the mask")
+        mask = fill_holes_in_mask(mask)
 
     logger.debug("Converting mask to mesh using iso-value: %s", iso_value if iso_value is not None else "auto")
     mesh = mask_to_mesh(mask, iso_value)
@@ -200,6 +223,13 @@ def mask2stl(mask_path: Path, image_path: Path | None, output_path: Path, iso_va
     ),
 )
 @click.option(
+    "--fill-holes",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Fill holes in the mask before mesh extraction. Only works on binary masks.",
+)
+@click.option(
     "--log-level",
     "-l",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
@@ -213,6 +243,7 @@ def cli(
     output: Path,
     suffix: str = ".stl",
     iso_value: float | None = None,
+    fill_holes: bool = False,
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
 ) -> NoReturn:
     """Convert a binary MASK to a mesh."""
@@ -232,7 +263,7 @@ def cli(
         click.secho(msg, fg="yellow")
 
     try:
-        mask2stl(mask_path=mask, image_path=image, output_path=output, iso_value=iso_value)
+        mask2stl(mask_path=mask, image_path=image, output_path=output, iso_value=iso_value, fill_holes=fill_holes)
     except (RuntimeError, ValueError) as e:
         click.secho(f"❌ {e}", fg="red")
         logger.debug("Full traceback: %s", format_exc())
