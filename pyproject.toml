@@ -30,7 +30,12 @@ mask2stl = "stl2mask.mask2stl:cli"
 source = "versioningit"
 default-version = "0.0.0+unknown"
 
+[tool.hatch.envs.hatch-static-analysis]
+dependencies = ["ruff==0.15.4"]
+config-path = "ruff_defaults.toml"
+
 [tool.ruff]
+extend = "ruff_defaults.toml"
 line-length = 120
 
 [tool.ruff.lint]

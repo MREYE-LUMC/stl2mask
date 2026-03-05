@@ -72,7 +72,12 @@ def test_mask2stl_with_reference_image(tmp_path: Path, mocker: MockerFixture) ->
     transform_mesh_mock = mocker.patch.object(mask2stl_module, "transform_mesh")
     save_mesh_mock = mocker.patch.object(mask2stl_module, "save_mesh")
 
-    mask2stl_module.mask2stl(mask_path=mask_path, image_path=image_path, output_path=output_path, iso_value=None)
+    mask2stl_module.mask2stl(
+        mask_path=mask_path,
+        image_path=image_path,
+        output_path=output_path,
+        iso_value=None,
+    )
 
     assert read_image_mock.call_count == 2  # noqa: PLR2004
     assert read_image_mock.call_args_list[0].args == (mask_path,)
@@ -82,7 +87,11 @@ def test_mask2stl_with_reference_image(tmp_path: Path, mocker: MockerFixture) ->
     assert mask_to_mesh_mock.call_args.args == (mask_image, None)
 
     assert transform_mesh_mock.call_count == 1
-    assert transform_mesh_mock.call_args.args == (mocker.sentinel.mesh, mask_image, reference_image)
+    assert transform_mesh_mock.call_args.args == (
+        mocker.sentinel.mesh,
+        mask_image,
+        reference_image,
+    )
 
     assert save_mesh_mock.call_count == 1
     assert save_mesh_mock.call_args.args == (mocker.sentinel.mesh, output_path)
@@ -109,7 +118,12 @@ def test_mask2stl_rejects_out_of_range_iso_value(tmp_path: Path, mocker: MockerF
     read_image_mock.return_value = mask_image
 
     with pytest.raises(ValueError, match="iso value"):
-        mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, iso_value=300.0)
+        mask2stl_module.mask2stl(
+            mask_path=mask_path,
+            image_path=None,
+            output_path=output_path,
+            iso_value=300.0,
+        )
 
 
 def test_cli_uses_default_suffix(tmp_path: Path, runner: CliRunner, mocker: MockerFixture) -> None:
@@ -165,7 +179,10 @@ def test_cli_rejects_suffix_without_dot(tmp_path: Path, runner: CliRunner, mocke
     mask_path = tmp_path / "mask.nii.gz"
     mask_path.write_text("")
 
-    mocker.patch("stl2mask.mask2stl.mask2stl", side_effect=lambda: pytest.fail("mask2stl should not be called"))
+    mocker.patch(
+        "stl2mask.mask2stl.mask2stl",
+        side_effect=lambda: pytest.fail("mask2stl should not be called"),
+    )
 
     result = runner.invoke(
         mask2stl_module.cli,
@@ -220,7 +237,10 @@ def assert_meshes_equal(mesh1: mm.Mesh, mesh2: mm.Mesh) -> None:
     vertices_2 = mn.getNumpyVerts(mesh2)
 
     if faces_1.shape != faces_2.shape or vertices_1.shape != vertices_2.shape:
-        msg = f"Meshes have different numbers of faces or vertices: {faces_1.shape[0]} vs {faces_2.shape[0]} faces, {vertices_1.shape[0]} vs {vertices_2.shape[0]} vertices"
+        msg = (
+            f"Meshes have different numbers of faces or vertices: "
+            f"{faces_1.shape[0]} vs {faces_2.shape[0]} faces, {vertices_1.shape[0]} vs {vertices_2.shape[0]} vertices"
+        )
         raise AssertionError(msg)
 
     # Compare faces and vertices with a tolerance to account for minor differences in mesh generation
