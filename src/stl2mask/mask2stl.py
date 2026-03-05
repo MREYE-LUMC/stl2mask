@@ -129,7 +129,14 @@ def transform_mesh(mesh: mm.Mesh, mask: sitk.Image, image: sitk.Image) -> None:
 MAX_MASK_VALUES = 2
 
 
-def mask2stl(*, mask_path: Path, image_path: Path | None, output_path: Path, iso_value: float | None = None, fill_holes: bool = False) -> None:
+def mask2stl(
+    *,
+    mask_path: Path,
+    image_path: Path | None,
+    output_path: Path,
+    iso_value: float | None = None,
+    fill_holes: bool = False,
+) -> None:
     """Convert a binary mask to a mesh and save it to a file.
 
     The mask contour is extracted using the dual marching cubes algorithm, based
@@ -148,6 +155,8 @@ def mask2stl(*, mask_path: Path, image_path: Path | None, output_path: Path, iso
     iso_value : float, optional
         Iso-value for mesh extraction. If None, the mean of the minimum and maximum
         values in the mask is used.
+    fill_holes : bool, optional
+        Whether to fill holes in the binary mask before converting to a mesh. Defaults to `False`.
 
     """
     logger.debug("Reading mask from %s", mask_path)
@@ -171,7 +180,10 @@ def mask2stl(*, mask_path: Path, image_path: Path | None, output_path: Path, iso
         logger.debug("Filling holes in the mask")
         mask = fill_holes_in_mask(mask)
 
-    logger.debug("Converting mask to mesh using iso-value: %s", iso_value if iso_value is not None else "auto")
+    logger.debug(
+        "Converting mask to mesh using iso-value: %s",
+        iso_value if iso_value is not None else "auto",
+    )
     mesh = mask_to_mesh(mask, iso_value)
 
     if image is not None:
@@ -183,7 +195,10 @@ def mask2stl(*, mask_path: Path, image_path: Path | None, output_path: Path, iso
 
 
 @click.command()
-@click.argument("mask", type=click.Path(exists=True, dir_okay=False, resolve_path=True, path_type=Path))
+@click.argument(
+    "mask",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True, path_type=Path),
+)
 @click.option(
     "--image",
     "-i",
@@ -224,6 +239,7 @@ def mask2stl(*, mask_path: Path, image_path: Path | None, output_path: Path, iso
 )
 @click.option(
     "--fill-holes",
+    "--dentist",
     "-f",
     is_flag=True,
     default=False,
@@ -238,6 +254,7 @@ def mask2stl(*, mask_path: Path, image_path: Path | None, output_path: Path, iso
     help="Set the logging level.",
 )
 def cli(
+    *,
     mask: Path,
     image: Path | None,
     output: Path,
@@ -263,7 +280,13 @@ def cli(
         click.secho(msg, fg="yellow")
 
     try:
-        mask2stl(mask_path=mask, image_path=image, output_path=output, iso_value=iso_value, fill_holes=fill_holes)
+        mask2stl(
+            mask_path=mask,
+            image_path=image,
+            output_path=output,
+            iso_value=iso_value,
+            fill_holes=fill_holes,
+        )
     except (RuntimeError, ValueError) as e:
         click.secho(f"❌ {e}", fg="red")
         logger.debug("Full traceback: %s", format_exc())
