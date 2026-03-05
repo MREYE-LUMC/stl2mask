@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import meshlib.mrmeshnumpy as mn
+import meshlib.mrmeshpy as mm
 import numpy as np
 import pytest
 import SimpleITK as sitk
@@ -34,7 +36,7 @@ def test_mask2stl_without_reference_image(tmp_path: Path, mocker: MockerFixture)
     transform_mesh_mock = mocker.patch.object(mask2stl_module, "transform_mesh")
     save_mesh_mock = mocker.patch.object(mask2stl_module, "save_mesh")
 
-    mask2stl_module.mask2stl(mask_path, None, output_path, iso_value=64.0)
+    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, iso_value=64.0)
 
     assert read_mesh_mock.call_count == 1
     assert read_mesh_mock.call_args.args == (mask_path,)
@@ -70,7 +72,12 @@ def test_mask2stl_with_reference_image(tmp_path: Path, mocker: MockerFixture) ->
     transform_mesh_mock = mocker.patch.object(mask2stl_module, "transform_mesh")
     save_mesh_mock = mocker.patch.object(mask2stl_module, "save_mesh")
 
-    mask2stl_module.mask2stl(mask_path, image_path, output_path, iso_value=None)
+    mask2stl_module.mask2stl(
+        mask_path=mask_path,
+        image_path=image_path,
+        output_path=output_path,
+        iso_value=None,
+    )
 
     assert read_image_mock.call_count == 2  # noqa: PLR2004
     assert read_image_mock.call_args_list[0].args == (mask_path,)
@@ -80,7 +87,11 @@ def test_mask2stl_with_reference_image(tmp_path: Path, mocker: MockerFixture) ->
     assert mask_to_mesh_mock.call_args.args == (mask_image, None)
 
     assert transform_mesh_mock.call_count == 1
-    assert transform_mesh_mock.call_args.args == (mocker.sentinel.mesh, mask_image, reference_image)
+    assert transform_mesh_mock.call_args.args == (
+        mocker.sentinel.mesh,
+        mask_image,
+        reference_image,
+    )
 
     assert save_mesh_mock.call_count == 1
     assert save_mesh_mock.call_args.args == (mocker.sentinel.mesh, output_path)
@@ -95,7 +106,7 @@ def test_mask2stl_rejects_non_binary_mask(tmp_path: Path, mocker: MockerFixture)
     read_image_mock.return_value = mask_image
 
     with pytest.raises(ValueError, match="binary image"):
-        mask2stl_module.mask2stl(mask_path, None, output_path)
+        mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path)
 
 
 def test_mask2stl_rejects_out_of_range_iso_value(tmp_path: Path, mocker: MockerFixture) -> None:
@@ -107,7 +118,12 @@ def test_mask2stl_rejects_out_of_range_iso_value(tmp_path: Path, mocker: MockerF
     read_image_mock.return_value = mask_image
 
     with pytest.raises(ValueError, match="iso value"):
-        mask2stl_module.mask2stl(mask_path, None, output_path, iso_value=300.0)
+        mask2stl_module.mask2stl(
+            mask_path=mask_path,
+            image_path=None,
+            output_path=output_path,
+            iso_value=300.0,
+        )
 
 
 def test_cli_uses_default_suffix(tmp_path: Path, runner: CliRunner, mocker: MockerFixture) -> None:
@@ -125,6 +141,7 @@ def test_cli_uses_default_suffix(tmp_path: Path, runner: CliRunner, mocker: Mock
         "image_path": None,
         "output_path": expected_output,
         "iso_value": None,
+        "fill_holes": False,
     }
     assert str(expected_output) in result.output
 
@@ -154,6 +171,7 @@ def test_cli_warns_on_suffix_mismatch(tmp_path: Path, runner: CliRunner, mocker:
         "image_path": None,
         "output_path": output_path,
         "iso_value": None,
+        "fill_holes": False,
     }
 
 
@@ -161,7 +179,10 @@ def test_cli_rejects_suffix_without_dot(tmp_path: Path, runner: CliRunner, mocke
     mask_path = tmp_path / "mask.nii.gz"
     mask_path.write_text("")
 
-    mocker.patch("stl2mask.mask2stl.mask2stl", side_effect=lambda: pytest.fail("mask2stl should not be called"))
+    mocker.patch(
+        "stl2mask.mask2stl.mask2stl",
+        side_effect=lambda: pytest.fail("mask2stl should not be called"),
+    )
 
     result = runner.invoke(
         mask2stl_module.cli,
@@ -207,3 +228,68 @@ def test_cli_normalizes_log_level_case(tmp_path: Path, runner: CliRunner, mocker
 
     assert result.exit_code == 0
     assert logger_mock.setLevel.call_args.args == ("WARNING",)
+
+
+def assert_meshes_equal(mesh1: mm.Mesh, mesh2: mm.Mesh) -> None:
+    faces_1 = mn.getNumpyFaces(mesh1.topology)
+    faces_2 = mn.getNumpyFaces(mesh2.topology)
+    vertices_1 = mn.getNumpyVerts(mesh1)
+    vertices_2 = mn.getNumpyVerts(mesh2)
+
+    if faces_1.shape != faces_2.shape or vertices_1.shape != vertices_2.shape:
+        msg = (
+            f"Meshes have different numbers of faces or vertices: "
+            f"{faces_1.shape[0]} vs {faces_2.shape[0]} faces, {vertices_1.shape[0]} vs {vertices_2.shape[0]} vertices"
+        )
+        raise AssertionError(msg)
+
+    # Compare faces and vertices with a tolerance to account for minor differences in mesh generation
+    faces_match = np.allclose(faces_1, faces_2, atol=1e-7)
+    vertices_match = np.allclose(vertices_1, vertices_2, atol=1e-7)
+
+    if not (faces_match and vertices_match):
+        msg = "Meshes have different geometries"
+        raise AssertionError(msg)
+
+
+def test_convert_sphere(data_path: Path, tmp_path: Path) -> None:
+    mask_path = data_path / "sphere.nii.gz"
+    output_path = tmp_path / "sphere.stl"
+    expected_result = mm.loadMesh(data_path / "sphere.stl")
+
+    # Convert the mask to STL
+    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path)
+
+    result = mm.loadMesh(output_path)
+
+    assert_meshes_equal(result, expected_result)
+
+
+def test_convert_hollow_sphere(data_path: Path, tmp_path: Path) -> None:
+    mask_path = data_path / "hollow_sphere.nii.gz"
+    output_path = tmp_path / "hollow_sphere.stl"
+    expected_result = mm.loadMesh(data_path / "hollow_sphere.stl")
+
+    # Convert the mask to STL with hole filling enabled
+    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, fill_holes=False)
+
+    result = mm.loadMesh(output_path)
+
+    assert_meshes_equal(result, expected_result)
+
+
+def test_convert_hollow_sphere_fill_holes(data_path: Path, tmp_path: Path) -> None:
+    mask_path = data_path / "hollow_sphere.nii.gz"
+    output_path = tmp_path / "hollow_sphere_filled.stl"
+    expected_result = mm.loadMesh(data_path / "hollow_sphere_filled.stl")
+
+    # Also compare against the sphere, which should be the same
+    sphere_result = mm.loadMesh(data_path / "sphere.stl")
+
+    # Convert the mask to STL with hole filling enabled
+    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, fill_holes=True)
+
+    result = mm.loadMesh(output_path)
+
+    assert_meshes_equal(result, expected_result)
+    assert_meshes_equal(result, sphere_result)

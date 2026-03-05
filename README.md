@@ -58,6 +58,7 @@ mask2stl path/to/mask.nii.gz
 - `-o`, `--output`: Path to the output mesh file. If not provided, the output file will be saved in the current directory with the same name as the input mask file but with a `.stl` extension.
 - `-s`, `--suffix`: Suffix for the output file if `--output` is not provided. Default is `.stl`.
 - `-v`, `--iso-value`: Iso-value for the Marching Cubes algorithm. Defaults to the midpoint between the minimum and maximum values in the mask image.
+- `-f`, `--fill-holes`: Whether to fill holes in the binary mask before converting to a mesh. Default is `False`.
 - `-l`, `--log-level`: Set the logging level. Options are `DEBUG`, `INFO`, `WARNING`, or `ERROR`. Default is `INFO`.
 
 ## Examples
