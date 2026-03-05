@@ -130,11 +130,11 @@ MAX_MASK_VALUES = 2
 
 
 def mask2stl(
-    *,
     mask_path: Path,
     image_path: Path | None,
     output_path: Path,
     iso_value: float | None = None,
+    *,
     fill_holes: bool = False,
 ) -> None:
     """Convert a binary mask to a mesh and save it to a file.

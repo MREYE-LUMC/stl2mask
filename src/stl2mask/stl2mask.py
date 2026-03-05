@@ -237,6 +237,7 @@ def stl2mask(
     help="Set the logging level.",
 )
 def cli(
+    *,
     mesh: Path,
     image: Path,
     output: Path | None = None,
