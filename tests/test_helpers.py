@@ -28,6 +28,7 @@ def test_full_suffix(path: Path, expected: str) -> None:
         (Path("file"), ".nii", Path("file.nii")),
         (Path("file.nii"), ".stl", Path("file.stl")),
         (Path("file.nii.gz"), ".stl", Path("file.stl")),
+        (Path("file.one.two.three"), ".stl", Path("file.stl")),
         (Path("file.stl"), ".nii.gz", Path("file.nii.gz")),
         (Path("file.stl.zip"), ".nii.gz", Path("file.nii.gz")),
     ],

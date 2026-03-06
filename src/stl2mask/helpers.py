@@ -97,4 +97,6 @@ def with_suffix(path: Path, suffix: str) -> Path:
         msg = f"Invalid suffix '{suffix}'. Suffix must start with a dot."
         raise ValueError(msg)
 
-    return path.with_suffix("").with_suffix(suffix)
+    stem = path.name.split(".")[0]
+
+    return path.with_name(stem + suffix)
