@@ -90,11 +90,11 @@ def full_suffix(path: Path) -> str:
 
 def with_suffix(path: Path, suffix: str) -> Path:
     """Change the suffix of a file path, replacing the full existing suffix."""
-    if not suffix.startswith("."):
-        msg = f"Invalid suffix '{suffix}'. Suffix must start with a dot."
-        raise ValueError(msg)
     if not suffix:
         msg = "Suffix cannot be empty."
+        raise ValueError(msg)
+    if not suffix.startswith("."):
+        msg = f"Invalid suffix '{suffix}'. Suffix must start with a dot."
         raise ValueError(msg)
 
     return path.with_suffix("").with_suffix(suffix)

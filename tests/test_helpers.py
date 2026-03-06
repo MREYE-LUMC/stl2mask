@@ -34,3 +34,16 @@ def test_full_suffix(path: Path, expected: str) -> None:
 )
 def test_with_suffix(path: Path, suffix: str, expected: Path) -> None:
     assert with_suffix(path, suffix) == expected
+
+
+@pytest.mark.parametrize(
+    "suffix, expected_error",
+    [
+        ("nii", "Invalid suffix 'nii'. Suffix must start with a dot."),
+        ("", "Suffix cannot be empty."),
+        (None, "Suffix cannot be empty."),
+    ],
+)
+def test_with_suffix_invalid_suffix(suffix: str, expected_error: str) -> None:
+    with pytest.raises(ValueError, match=expected_error):
+        with_suffix(Path("file"), suffix)
