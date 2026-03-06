@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import SimpleITK as sitk
 
-import stl2mask.mask2stl as mask2stl_module
+from stl2mask import mask_to_stl
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -31,12 +31,12 @@ def test_mask2stl_without_reference_image(tmp_path: Path, mocker: MockerFixture)
 
     mask_image = _make_mask_image(np.array([[[0, 255], [0, 0]], [[0, 0], [0, 0]]]))
 
-    read_mesh_mock = mocker.patch.object(mask2stl_module, "read_image", return_value=mask_image)
-    mask_to_mesh_mock = mocker.patch.object(mask2stl_module, "mask_to_mesh", return_value=mocker.sentinel.mesh)
-    transform_mesh_mock = mocker.patch.object(mask2stl_module, "transform_mesh")
-    save_mesh_mock = mocker.patch.object(mask2stl_module, "save_mesh")
+    read_mesh_mock = mocker.patch.object(mask_to_stl, "read_image", return_value=mask_image)
+    mask_to_mesh_mock = mocker.patch.object(mask_to_stl, "mask_to_mesh", return_value=mocker.sentinel.mesh)
+    transform_mesh_mock = mocker.patch.object(mask_to_stl, "transform_mesh")
+    save_mesh_mock = mocker.patch.object(mask_to_stl, "save_mesh")
 
-    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, iso_value=64.0)
+    mask_to_stl.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, iso_value=64.0)
 
     assert read_mesh_mock.call_count == 1
     assert read_mesh_mock.call_args.args == (mask_path,)
@@ -67,12 +67,12 @@ def test_mask2stl_with_reference_image(tmp_path: Path, mocker: MockerFixture) ->
         msg = f"Unexpected path {path}"
         raise AssertionError(msg)
 
-    read_image_mock = mocker.patch.object(mask2stl_module, "read_image", side_effect=fake_read_image)
-    mask_to_mesh_mock = mocker.patch.object(mask2stl_module, "mask_to_mesh", return_value=mocker.sentinel.mesh)
-    transform_mesh_mock = mocker.patch.object(mask2stl_module, "transform_mesh")
-    save_mesh_mock = mocker.patch.object(mask2stl_module, "save_mesh")
+    read_image_mock = mocker.patch.object(mask_to_stl, "read_image", side_effect=fake_read_image)
+    mask_to_mesh_mock = mocker.patch.object(mask_to_stl, "mask_to_mesh", return_value=mocker.sentinel.mesh)
+    transform_mesh_mock = mocker.patch.object(mask_to_stl, "transform_mesh")
+    save_mesh_mock = mocker.patch.object(mask_to_stl, "save_mesh")
 
-    mask2stl_module.mask2stl(
+    mask_to_stl.mask2stl(
         mask_path=mask_path,
         image_path=image_path,
         output_path=output_path,
@@ -102,11 +102,11 @@ def test_mask2stl_rejects_non_binary_mask(tmp_path: Path, mocker: MockerFixture)
     output_path = tmp_path / "mesh.stl"
     mask_image = _make_mask_image(np.array([[[0, 1, 2]]]))
 
-    read_image_mock = mocker.patch.object(mask2stl_module, "read_image")
+    read_image_mock = mocker.patch.object(mask_to_stl, "read_image")
     read_image_mock.return_value = mask_image
 
     with pytest.raises(ValueError, match="binary image"):
-        mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path)
+        mask_to_stl.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path)
 
 
 def test_mask2stl_rejects_out_of_range_iso_value(tmp_path: Path, mocker: MockerFixture) -> None:
@@ -114,11 +114,11 @@ def test_mask2stl_rejects_out_of_range_iso_value(tmp_path: Path, mocker: MockerF
     output_path = tmp_path / "mesh.stl"
     mask_image = _make_mask_image(np.array([[[0, 255]]]))
 
-    read_image_mock = mocker.patch.object(mask2stl_module, "read_image")
+    read_image_mock = mocker.patch.object(mask_to_stl, "read_image")
     read_image_mock.return_value = mask_image
 
     with pytest.raises(ValueError, match="iso value"):
-        mask2stl_module.mask2stl(
+        mask_to_stl.mask2stl(
             mask_path=mask_path,
             image_path=None,
             output_path=output_path,
@@ -130,12 +130,12 @@ def test_cli_uses_default_suffix(tmp_path: Path, runner: CliRunner, mocker: Mock
     mask_path = tmp_path / "mask.nii.gz"
     mask_path.write_text("")
 
-    mask2stl_mock = mocker.patch("stl2mask.mask2stl.mask2stl")
+    mask2stl_mock = mocker.patch("stl2mask.mask_to_stl.mask2stl")
 
-    result = runner.invoke(mask2stl_module.cli, [str(mask_path)])
+    result = runner.invoke(mask_to_stl.cli, [str(mask_path)])
 
     assert result.exit_code == 0
-    expected_output = mask_path.with_suffix(".stl")
+    expected_output = mask_path.with_suffix("").with_suffix(".stl")
     assert mask2stl_mock.call_args.kwargs == {
         "mask_path": mask_path,
         "image_path": None,
@@ -151,10 +151,10 @@ def test_cli_warns_on_suffix_mismatch(tmp_path: Path, runner: CliRunner, mocker:
     mask_path.write_text("")
     output_path = tmp_path / "custom.stl"
 
-    mask2stl_mock = mocker.patch("stl2mask.mask2stl.mask2stl")
+    mask2stl_mock = mocker.patch("stl2mask.mask_to_stl.mask2stl")
 
     result = runner.invoke(
-        mask2stl_module.cli,
+        mask_to_stl.cli,
         [
             str(mask_path),
             "--output",
@@ -180,12 +180,12 @@ def test_cli_rejects_suffix_without_dot(tmp_path: Path, runner: CliRunner, mocke
     mask_path.write_text("")
 
     mocker.patch(
-        "stl2mask.mask2stl.mask2stl",
+        "stl2mask.mask_to_stl.mask2stl",
         side_effect=lambda: pytest.fail("mask2stl should not be called"),
     )
 
     result = runner.invoke(
-        mask2stl_module.cli,
+        mask_to_stl.cli,
         [str(mask_path), "--suffix", "stl"],
     )
 
@@ -197,13 +197,13 @@ def test_cli_sets_requested_log_level(tmp_path: Path, runner: CliRunner, mocker:
     mask_path = tmp_path / "mask.nii"
     mask_path.write_text("")
 
-    stl2mask_mock = mocker.patch("stl2mask.mask2stl.mask2stl")
-    get_logger_mock = mocker.patch("stl2mask.mask2stl.logging.getLogger")
+    stl2mask_mock = mocker.patch("stl2mask.mask_to_stl.mask2stl")
+    get_logger_mock = mocker.patch("stl2mask.mask_to_stl.logging.getLogger")
     logger_mock = mocker.Mock()
     get_logger_mock.return_value = logger_mock
 
     result = runner.invoke(
-        mask2stl_module.cli,
+        mask_to_stl.cli,
         [str(mask_path), "--log-level", "DEBUG"],
     )
 
@@ -216,13 +216,13 @@ def test_cli_normalizes_log_level_case(tmp_path: Path, runner: CliRunner, mocker
     mask_path = tmp_path / "mask.nii"
     mask_path.write_text("")
 
-    mocker.patch("stl2mask.mask2stl.mask2stl")
-    get_logger_mock = mocker.patch("stl2mask.mask2stl.logging.getLogger")
+    mocker.patch("stl2mask.mask_to_stl.mask2stl")
+    get_logger_mock = mocker.patch("stl2mask.mask_to_stl.logging.getLogger")
     logger_mock = mocker.Mock()
     get_logger_mock.return_value = logger_mock
 
     result = runner.invoke(
-        mask2stl_module.cli,
+        mask_to_stl.cli,
         [str(mask_path), "--log-level", "warning"],
     )
 
@@ -258,7 +258,7 @@ def test_convert_sphere(data_path: Path, tmp_path: Path) -> None:
     expected_result = mm.loadMesh(data_path / "sphere.stl")
 
     # Convert the mask to STL
-    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path)
+    mask_to_stl.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path)
 
     result = mm.loadMesh(output_path)
 
@@ -271,7 +271,7 @@ def test_convert_hollow_sphere(data_path: Path, tmp_path: Path) -> None:
     expected_result = mm.loadMesh(data_path / "hollow_sphere.stl")
 
     # Convert the mask to STL with hole filling enabled
-    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, fill_holes=False)
+    mask_to_stl.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, fill_holes=False)
 
     result = mm.loadMesh(output_path)
 
@@ -287,7 +287,7 @@ def test_convert_hollow_sphere_fill_holes(data_path: Path, tmp_path: Path) -> No
     sphere_result = mm.loadMesh(data_path / "sphere.stl")
 
     # Convert the mask to STL with hole filling enabled
-    mask2stl_module.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, fill_holes=True)
+    mask_to_stl.mask2stl(mask_path=mask_path, image_path=None, output_path=output_path, fill_holes=True)
 
     result = mm.loadMesh(output_path)
 

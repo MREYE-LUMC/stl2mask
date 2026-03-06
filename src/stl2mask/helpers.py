@@ -10,7 +10,15 @@ import SimpleITK as sitk
 if TYPE_CHECKING:
     from pathlib import Path
 
-__all__ = ["matrix3f", "read_image", "read_mesh", "save_mask"]
+__all__ = [
+    "full_suffix",
+    "matrix3f",
+    "read_image",
+    "read_mesh",
+    "save_mask",
+    "save_mesh",
+    "with_suffix",
+]
 
 
 def matrix3f(x: tuple[float, ...]) -> mm.Matrix3f:
@@ -73,3 +81,22 @@ def save_mesh(mesh: mm.Mesh, output_path: Path) -> None:
     except RuntimeError as e:
         msg = f"Failed to write mesh to {output_path}. Is the file type supported by meshlib?"
         raise RuntimeError(msg) from e
+
+
+def full_suffix(path: Path) -> str:
+    """Get the full suffix of a file path, including multiple extensions."""
+    return "".join(path.suffixes)
+
+
+def with_suffix(path: Path, suffix: str) -> Path:
+    """Change the suffix of a file path, replacing the full existing suffix."""
+    if not suffix:
+        msg = "Suffix cannot be empty."
+        raise ValueError(msg)
+    if not suffix.startswith("."):
+        msg = f"Invalid suffix '{suffix}'. Suffix must start with a dot."
+        raise ValueError(msg)
+
+    stem = path.name.split(".")[0]
+
+    return path.with_name(stem + suffix)

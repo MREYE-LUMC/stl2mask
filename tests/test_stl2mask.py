@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import SimpleITK as sitk
 
-import stl2mask.stl2mask as stl2mask_module
+from stl2mask import stl_to_mask
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -22,13 +22,13 @@ def test_stl2mask_calls_dependencies(tmp_path: Path, mocker: MockerFixture) -> N
     image_path.write_text("")
     output_path = tmp_path / "mask.nii.gz"
 
-    read_mesh_mock = mocker.patch.object(stl2mask_module, "read_mesh")
-    read_image_mock = mocker.patch.object(stl2mask_module, "read_image")
-    voxelize_mock = mocker.patch.object(stl2mask_module, "voxelize_mesh")
-    mask_to_image_mock = mocker.patch.object(stl2mask_module, "mask_to_image")
-    save_mask_mock = mocker.patch.object(stl2mask_module, "save_mask")
+    read_mesh_mock = mocker.patch.object(stl_to_mask, "read_mesh")
+    read_image_mock = mocker.patch.object(stl_to_mask, "read_image")
+    voxelize_mock = mocker.patch.object(stl_to_mask, "voxelize_mesh")
+    mask_to_image_mock = mocker.patch.object(stl_to_mask, "mask_to_image")
+    save_mask_mock = mocker.patch.object(stl_to_mask, "save_mask")
 
-    stl2mask_module.stl2mask(
+    stl_to_mask.stl2mask(
         mesh_path=mesh_path,
         image_path=image_path,
         output_path=output_path,
@@ -59,9 +59,9 @@ def test_cli_uses_default_output_suffix(tmp_path: Path, runner: CliRunner, mocke
     image_path = tmp_path / "image.nii"
     image_path.write_text("")
 
-    stl2mask_mock = mocker.patch("stl2mask.stl2mask.stl2mask")
+    stl2mask_mock = mocker.patch("stl2mask.stl_to_mask.stl2mask")
 
-    result = runner.invoke(stl2mask_module.cli, [str(mesh_path), str(image_path)])
+    result = runner.invoke(stl_to_mask.cli, [str(mesh_path), str(image_path)])
 
     assert result.exit_code == 0
     expected_output = mesh_path.with_suffix(".nii.gz")
@@ -83,10 +83,10 @@ def test_cli_warns_on_suffix_mismatch(tmp_path: Path, runner: CliRunner, mocker:
     image_path.write_text("")
     output_path = tmp_path / "custom.nii.gz"
 
-    stl2mask_mock = mocker.patch("stl2mask.stl2mask.stl2mask")
+    stl2mask_mock = mocker.patch("stl2mask.stl_to_mask.stl2mask")
 
     result = runner.invoke(
-        stl2mask_module.cli,
+        stl_to_mask.cli,
         [
             str(mesh_path),
             str(image_path),
@@ -115,10 +115,10 @@ def test_cli_rejects_suffix_without_dot(tmp_path: Path, runner: CliRunner, mocke
     image_path = tmp_path / "image.nii"
     image_path.write_text("")
 
-    stl2mask_mock = mocker.patch("stl2mask.stl2mask.stl2mask")
+    stl2mask_mock = mocker.patch("stl2mask.stl_to_mask.stl2mask")
 
     result = runner.invoke(
-        stl2mask_module.cli,
+        stl_to_mask.cli,
         [str(mesh_path), str(image_path), "--suffix", "nii.gz"],
     )
 
@@ -133,13 +133,13 @@ def test_cli_sets_requested_log_level(tmp_path: Path, runner: CliRunner, mocker:
     image_path = tmp_path / "image.nii"
     image_path.write_text("")
 
-    stl2mask_mock = mocker.patch("stl2mask.stl2mask.stl2mask")
-    get_logger_mock = mocker.patch("stl2mask.stl2mask.logging.getLogger")
+    stl2mask_mock = mocker.patch("stl2mask.stl_to_mask.stl2mask")
+    get_logger_mock = mocker.patch("stl2mask.stl_to_mask.logging.getLogger")
     logger_mock = mocker.Mock()
     get_logger_mock.return_value = logger_mock
 
     result = runner.invoke(
-        stl2mask_module.cli,
+        stl_to_mask.cli,
         [str(mesh_path), str(image_path), "--log-level", "DEBUG"],
     )
 
@@ -154,13 +154,13 @@ def test_cli_normalizes_log_level_case(tmp_path: Path, runner: CliRunner, mocker
     image_path = tmp_path / "image.nii"
     image_path.write_text("")
 
-    mocker.patch("stl2mask.stl2mask.stl2mask")
-    get_logger_mock = mocker.patch("stl2mask.stl2mask.logging.getLogger")
+    mocker.patch("stl2mask.stl_to_mask.stl2mask")
+    get_logger_mock = mocker.patch("stl2mask.stl_to_mask.logging.getLogger")
     logger_mock = mocker.Mock()
     get_logger_mock.return_value = logger_mock
 
     result = runner.invoke(
-        stl2mask_module.cli,
+        stl_to_mask.cli,
         [str(mesh_path), str(image_path), "--log-level", "warning"],
     )
 
@@ -176,7 +176,7 @@ def test_mask_to_image_preserves_metadata() -> None:
     reference.SetSpacing((0.5, 0.75, 1.25))
     reference.SetDirection((1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0))
 
-    result = stl2mask_module.mask_to_image(mask, reference)
+    result = stl_to_mask.mask_to_image(mask, reference)
 
     assert tuple(result.GetOrigin()) == tuple(reference.GetOrigin())
     assert tuple(result.GetSpacing()) == tuple(reference.GetSpacing())
@@ -195,8 +195,8 @@ def test_voxelize_mesh_validates_mask_value(mocker: MockerFixture) -> None:
 
     # Test invalid mask_value (too low)
     with pytest.raises(ValueError, match="mask_value must be between 1 and 255"):
-        stl2mask_module.voxelize_mesh(mock_mesh, mock_image, mask_value=0)
+        stl_to_mask.voxelize_mesh(mock_mesh, mock_image, mask_value=0)
 
     # Test invalid mask_value (too high)
     with pytest.raises(ValueError, match="mask_value must be between 1 and 255"):
-        stl2mask_module.voxelize_mesh(mock_mesh, mock_image, mask_value=256)
+        stl_to_mask.voxelize_mesh(mock_mesh, mock_image, mask_value=256)

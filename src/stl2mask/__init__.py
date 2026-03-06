@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from stl2mask import mask2stl, stl2mask
+from stl2mask import mask_to_stl, stl_to_mask
 
-__all__ = ["mask2stl", "stl2mask"]
+__all__ = ["mask_to_stl", "stl_to_mask"]

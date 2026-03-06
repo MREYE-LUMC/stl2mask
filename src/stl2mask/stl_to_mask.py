@@ -14,7 +14,14 @@ import meshlib.mrmeshpy as mm
 import numpy as np
 import SimpleITK as sitk
 
-from stl2mask.helpers import matrix3f, read_image, read_mesh, save_mask
+from stl2mask.helpers import (
+    full_suffix,
+    matrix3f,
+    read_image,
+    read_mesh,
+    save_mask,
+    with_suffix,
+)
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -256,10 +263,10 @@ def cli(
         raise click.BadParameter(msg)
 
     if output is None:
-        output = mesh.with_suffix(suffix)
+        output = with_suffix(mesh, suffix)
     elif not output.suffix:
-        output = output.with_suffix(suffix)
-    elif output.suffix != suffix:
+        output = with_suffix(output, suffix)
+    elif full_suffix(output) != suffix:
         msg = "⚠️ Output suffix does not match provided suffix. Ignoring provided suffix."
         click.secho(msg, fg="yellow")
 

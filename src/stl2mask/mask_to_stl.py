@@ -14,7 +14,7 @@ import meshlib.mrmeshpy as mm
 import numpy as np
 import SimpleITK as sitk
 
-from stl2mask.helpers import matrix3f, read_image, save_mesh
+from stl2mask.helpers import full_suffix, matrix3f, read_image, save_mesh, with_suffix
 
 __all__ = ["mask2stl"]
 
@@ -272,10 +272,10 @@ def cli(
         raise click.BadParameter(msg)
 
     if output is None:
-        output = mask.with_suffix(suffix)
+        output = with_suffix(mask, suffix)
     elif not output.suffix:
-        output = output.with_suffix(suffix)
-    elif output.suffix != suffix:
+        output = with_suffix(output, suffix)
+    elif full_suffix(output) != suffix:
         msg = "⚠️ Output suffix does not match provided suffix. Ignoring provided suffix."
         click.secho(msg, fg="yellow")
 
