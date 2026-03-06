@@ -10,7 +10,15 @@ import SimpleITK as sitk
 if TYPE_CHECKING:
     from pathlib import Path
 
-__all__ = ["matrix3f", "read_image", "read_mesh", "save_mask"]
+__all__ = [
+    "full_suffix",
+    "matrix3f",
+    "read_image",
+    "read_mesh",
+    "save_mask",
+    "save_mesh",
+    "with_suffix",
+]
 
 
 def matrix3f(x: tuple[float, ...]) -> mm.Matrix3f:

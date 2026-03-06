@@ -23,8 +23,8 @@ dependencies = [
 dynamic = ["version"]
 
 [project.scripts]
-stl2mask = "stl2mask.stl2mask:cli"
-mask2stl = "stl2mask.mask2stl:cli"
+stl2mask = "stl2mask.stl_to_mask:cli"
+mask2stl = "stl2mask.mask_to_stl:cli"
 
 [tool.hatch.version]
 source = "versioningit"
@@ -44,6 +44,9 @@ ignore = ["COM812", "D203", "D213", "ISC001"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "S101",]
+
+[tool.ruff.lint.flake8-pytest-style]
+parametrize-names-type = "csv"
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
