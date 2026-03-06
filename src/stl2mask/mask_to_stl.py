@@ -41,9 +41,7 @@ def fill_holes_in_mask(mask: sitk.Image) -> sitk.Image:
     """
     foreground_value = float(sitk.GetArrayViewFromImage(mask).max())
 
-    return sitk.BinaryFillhole(
-        mask, fullyConnected=False, foregroundValue=foreground_value
-    )
+    return sitk.BinaryFillhole(mask, fullyConnected=False, foregroundValue=foreground_value)
 
 
 def copy_mask_origin_and_direction(mesh: mm.Mesh, mask: sitk.Image) -> None:
@@ -78,9 +76,7 @@ def mask_to_mesh(mask: sitk.Image, iso_value: float | None = None) -> mm.Mesh:
         values in the mask is used.
 
     """
-    volume = mn.simpleVolumeFrom3Darray(
-        sitk.GetArrayFromImage(mask).swapaxes(0, 2).astype(np.float64)
-    )
+    volume = mn.simpleVolumeFrom3Darray(sitk.GetArrayFromImage(mask).swapaxes(0, 2).astype(np.float64))
     grid = mm.simpleVolumeToDenseGrid(volume)
 
     if iso_value is None:
@@ -113,9 +109,7 @@ def transform_mesh(mesh: mm.Mesh, mask: sitk.Image, image: sitk.Image) -> None:
 
     """
     origins_equal = np.allclose(np.array(image.GetOrigin()), np.array(mask.GetOrigin()))
-    directions_equal = np.allclose(
-        np.array(image.GetDirection()), np.array(mask.GetDirection())
-    )
+    directions_equal = np.allclose(np.array(image.GetDirection()), np.array(mask.GetDirection()))
 
     if not directions_equal:
         image_direction = np.array(image.GetDirection()).reshape(3, 3)
@@ -174,9 +168,7 @@ def mask2stl(
         msg = f"The input mask should be a binary image with at most two different values. Got {mask_values.tolist()}."
         raise ValueError(msg)
 
-    if iso_value is not None and (
-        iso_value <= np.min(mask_values) or iso_value >= np.max(mask_values)
-    ):
+    if iso_value is not None and (iso_value <= np.min(mask_values) or iso_value >= np.max(mask_values)):
         msg = f"The iso value should be between the minimum and maximum values in the mask. Got {iso_value}."
         raise ValueError(msg)
 
@@ -284,9 +276,7 @@ def cli(
     elif not output.suffix:
         output = with_suffix(output, suffix)
     elif full_suffix(output) != suffix:
-        msg = (
-            "⚠️ Output suffix does not match provided suffix. Ignoring provided suffix."
-        )
+        msg = "⚠️ Output suffix does not match provided suffix. Ignoring provided suffix."
         click.secho(msg, fg="yellow")
 
     try:
