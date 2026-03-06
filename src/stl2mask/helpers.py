@@ -73,3 +73,20 @@ def save_mesh(mesh: mm.Mesh, output_path: Path) -> None:
     except RuntimeError as e:
         msg = f"Failed to write mesh to {output_path}. Is the file type supported by meshlib?"
         raise RuntimeError(msg) from e
+
+
+def full_suffix(path: Path) -> str:
+    """Get the full suffix of a file path, including multiple extensions."""
+    return "".join(path.suffixes)
+
+
+def with_suffix(path: Path, suffix: str) -> Path:
+    """Change the suffix of a file path, replacing the full existing suffix."""
+    if not suffix.startswith("."):
+        msg = f"Invalid suffix '{suffix}'. Suffix must start with a dot."
+        raise ValueError(msg)
+    if not suffix:
+        msg = "Suffix cannot be empty."
+        raise ValueError(msg)
+
+    return path.with_suffix("").with_suffix(suffix)
