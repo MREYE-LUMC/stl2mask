@@ -3,6 +3,20 @@
   "extends": [
     "config:recommended"
   ],
-  "ignorePaths": ["pyproject.toml"],
-  "labels": ["dependencies"]
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "groupName": "Python version",
+      "matchFileNames": [
+        "pyproject.toml"
+      ],
+      "matchDepTypes": [
+        "dependencies",
+        "requires-python"
+      ],
+      "enabled": false
+    }
+  ]
 }
