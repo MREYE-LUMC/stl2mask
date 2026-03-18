@@ -10,6 +10,13 @@
     {
       "groupName": "Python version",
       "matchFileNames": [
+        ".python-version"
+      ],
+      "enabled": false
+    },
+    {
+      "groupName": "Dependencies and requires-python",
+      "matchFileNames": [
         "pyproject.toml"
       ],
       "matchDepTypes": [
