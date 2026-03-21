@@ -31,7 +31,7 @@ source = "versioningit"
 default-version = "0.0.0+unknown"
 
 [tool.hatch.envs.hatch-static-analysis]
-dependencies = ["ruff==0.15.6"]
+dependencies = ["ruff==0.15.7"]
 config-path = "ruff_defaults.toml"
 
 [tool.ruff]
