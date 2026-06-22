@@ -18,7 +18,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: MREYE-LUMC/actions/python-build@main
         with:
           artifact-name: dist
@@ -35,7 +35,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: MREYE-LUMC/actions/python-publish@main
         with:
           tag: ${{ github.ref }}
