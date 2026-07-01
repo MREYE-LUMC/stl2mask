@@ -239,7 +239,7 @@ def assert_meshes_equal(mesh1: mm.Mesh, mesh2: mm.Mesh) -> None:
     if faces_1.shape != faces_2.shape or vertices_1.shape != vertices_2.shape:
         msg = (
             f"Meshes have different numbers of faces or vertices: "
-            f"{faces_1.shape[0]} vs {faces_2.shape[0]} faces, {vertices_1.shape[0]} vs {vertices_2.shape[0]} vertices"
+            f"{faces_1.shape[0]} vs {faces_2.shape[0]} faces, {vertices_1.shape[0]} vs {vertices_2.shape[0]} vertices"  # type: ignore bad-index
         )
         raise AssertionError(msg)
 

@@ -92,10 +92,10 @@ def voxelize_mesh(
     params.vol.dimensions = mm.Vector3i(*image.GetSize())
     params.dist.signMode = mm.SignDetectionMode.HoleWindingRule
 
-    volume = mm.meshToDistanceVolume(transformed_mesh, params)
+    volume = mm.meshToDistanceVolume(transformed_mesh, params)  # type: ignore bad-argument-type
     distances = mn.getNumpy3Darray(volume)
 
-    voxels = np.zeros(distances.shape, dtype=np.uint8)
+    voxels = np.zeros(distances.shape, dtype=np.uint8)  # type: ignore no-matching-overload
     voxels[distances <= np.float64(threshold)] = mask_value
 
     return voxels

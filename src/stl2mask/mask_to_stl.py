@@ -76,7 +76,7 @@ def mask_to_mesh(mask: sitk.Image, iso_value: float | None = None) -> mm.Mesh:
         values in the mask is used.
 
     """
-    volume = mn.simpleVolumeFrom3Darray(sitk.GetArrayFromImage(mask).swapaxes(0, 2).astype(np.float64))
+    volume = mn.simpleVolumeFrom3Darray(sitk.GetArrayFromImage(mask).swapaxes(0, 2).astype(np.float64))  # type: ignore bad-argument-count
     grid = mm.simpleVolumeToDenseGrid(volume)
 
     if iso_value is None:
