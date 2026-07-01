@@ -30,7 +30,11 @@ mask2stl = "stl2mask.mask_to_stl:cli"
 source = "versioningit"
 default-version = "0.0.0+unknown"
 
-[tool.hatch.envs.hatch-static-analysis]
+[tool.hatch.envs.hatch-check-code]
+dependencies = ["ruff==0.15.20"]
+config-path = "ruff_defaults.toml"
+
+[tool.hatch.envs.hatch-check-fmt]
 dependencies = ["ruff==0.15.20"]
 config-path = "ruff_defaults.toml"
 
@@ -56,6 +60,15 @@ ignore-names = ["sitk"]
 
 [tool.ruff.lint.pylint]
 max-args = 10
+
+[tool.hatch.envs.hatch-check-types]
+config-path = "pyproject.toml"
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
 
 [dependency-groups]
 dev = [
