@@ -31,11 +31,11 @@ source = "versioningit"
 default-version = "0.0.0+unknown"
 
 [tool.hatch.envs.hatch-check-code]
-dependencies = ["ruff==0.16.3"]
+dependencies = ["ruff==0.16.5"]
 config-path = "ruff_defaults.toml"
 
 [tool.hatch.envs.hatch-check-fmt]
-dependencies = ["ruff==0.16.3"]
+dependencies = ["ruff==0.16.5"]
 config-path = "ruff_defaults.toml"
 
 [tool.ruff]
